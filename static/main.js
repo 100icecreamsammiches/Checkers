@@ -7,8 +7,6 @@ canvas.height = window.innerHeight * .9;
 var black = "#000000";
 var red = "#FF0000";
 var white = "#999999";
-var darkred = "#AA0000";
-var lightblack = "#000000";
 var isRed = true;
 var isTurn = true;
 var selected = false;
@@ -33,10 +31,10 @@ grid = [
 	[0,5,0,6,0,7,0,8],
 	[9,0,10,0,11,0,12,0],
 	[0,0,0,0,0,0,0,0],
-	[0,0,0,0,0,0,0,0],
-	[13,0,14,0,15,0,16,0],
-	[0,17,0,18,0,19,0,20],
-	[21,0,22,0,23,0,24,0]
+	[0,0,0,0,0,0,16,0],
+	[0,13,0,14,0,15,0,0],
+	[17,0,18,0,19,0,20,0],
+	[0,21,0,22,0,23,0,24]
 ]
 
 renderField(grid, context)
@@ -47,7 +45,7 @@ function renderField(grid, context){
 	tileHeight = canvas.height / 8;
     const fontSize = tileWidth / 1.5;
     context.font = fontSize + 'px serif';
-	var on = true;
+	var on = false;
 	for (var y = 0; y < 8; y++){
 		for (var x = 0; x < 8; x++){
 			context.beginPath();
@@ -66,30 +64,30 @@ function renderField(grid, context){
 	for (var y = 0; y < 8; y++){
 		for (var x = 0; x < 8; x++){
 			if (blacks.indexOf(grid[y][x]) != -1){
-				context.fillStyle = lightblack;
+				context.fillStyle = black;
 				context.lineWidth = 5;
 				if (selected[0] == x && selected[1] == y){
-					context.strokeStyle = "#DDDDDD";
-				}
-				else{
 					context.strokeStyle = white;
 				}
+				else{
+					context.strokeStyle = "#999999";
+				}
 				context.beginPath();
-				context.ellipse((x*tileWidth)+(tileWidth/2), (y*tileHeight)+(tileHeight/2), tileWidth/2-2.5, tileHeight/2-2.5, 0, 0, 2*Math.PI);
+				context.ellipse((x*tileWidth)+(tileWidth/2), (y*tileHeight)+(tileHeight/2), tileWidth/2-5, tileHeight/2-5, 0, 0, 2*Math.PI);
 				context.fill();
 				context.stroke();
 			}
 			else if (reds.indexOf(grid[y][x]) != -1){
-				context.fillStyle = darkred;
+				context.fillStyle = red;
 				context.lineWidth = 5;
 				if (selected[0] == x && selected[1] == y){
-					context.strokeStyle = "#DDDDDD";
+					context.strokeStyle = white;
 				}
 				else{
-					context.strokeStyle = black;
+					context.strokeStyle = red;
 				}
 				context.beginPath();
-				context.ellipse((x*tileWidth)+(tileWidth/2), (y*tileHeight)+(tileHeight/2), tileWidth/2-2.5, tileHeight/2-2.5, 0, 0, 2*Math.PI);
+				context.ellipse((x*tileWidth)+(tileWidth/2), (y*tileHeight)+(tileHeight/2), tileWidth/2-5, tileHeight/2-5, 0, 0, 2*Math.PI);
 				context.fill();
 				context.stroke();
 			}
@@ -111,6 +109,7 @@ function click(e) {
 				Math.floor(mousePos.x * (8 / canvas.width)),
 				Math.floor(mousePos.y * (8 / canvas.height))
 			];
+			clicked = grid[clickPos[1]][clickPos[0]]
 			if (!selected || pieces.indexOf(clicked) != -1){
 				if (pieces.indexOf(clicked) != -1){
 					selected = [clickPos[0], clickPos[1]];
@@ -122,6 +121,16 @@ function click(e) {
 					grid[clickPos[1]][clickPos[0]] = grid[selected[1]][selected[0]];
 					grid[selected[1]][selected[0]] = 0;
 					selected = false;
+				}
+			}
+			else if ([selected[0] - 2, selected[0] + 2, selected[0]].indexOf(clickPos[0]) != -1 && clickPos[1] == selected[1] + 2){
+				if (grid[selected[0]+1][selected[1]+1] != 0 && pieces.indexOf(grid[selected[0]+1][selected[1]+1]) == -1){
+					if (clickPos[0] == selected[0] + 2){
+						grid[clickPos[1]][clickPos[0]] = grid[selected[1]][selected[0]];
+						grid[selected[1]][selected[0]] = 0;
+						grid[selected[1]][selected[0]+1] = 0;
+						selected = false;
+					}
 				}
 			}
 		}
