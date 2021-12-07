@@ -64,13 +64,13 @@ function renderField(grid, context){
 	for (var y = 0; y < 8; y++){
 		for (var x = 0; x < 8; x++){
 			if (blacks.indexOf(grid[y][x]) != -1){
-				context.fillStyle = black;
+				context.fillStyle = "#cccccc";
 				context.lineWidth = 5;
 				if (selected[0] == x && selected[1] == y){
 					context.strokeStyle = white;
 				}
 				else{
-					context.strokeStyle = "#999999";
+					context.strokeStyle = "#aaaaaa";
 				}
 				context.beginPath();
 				context.ellipse((x*tileWidth)+(tileWidth/2), (y*tileHeight)+(tileHeight/2), tileWidth/2-5, tileHeight/2-5, 0, 0, 2*Math.PI);
@@ -84,7 +84,7 @@ function renderField(grid, context){
 					context.strokeStyle = white;
 				}
 				else{
-					context.strokeStyle = red;
+					context.strokeStyle = "#CC0000";
 				}
 				context.beginPath();
 				context.ellipse((x*tileWidth)+(tileWidth/2), (y*tileHeight)+(tileHeight/2), tileWidth/2-5, tileHeight/2-5, 0, 0, 2*Math.PI);
@@ -113,27 +113,92 @@ function click(e) {
 			if (!selected || pieces.indexOf(clicked) != -1){
 				if (pieces.indexOf(clicked) != -1){
 					selected = [clickPos[0], clickPos[1]];
-					console.log("selected " + selected);
 				}
         	}
-			else if([selected[0] - 1, selected[0] + 1].indexOf(clickPos[0]) != -1 && clickPos[1] == selected[1] + 1){
-				if (clicked == 0){
-					grid[clickPos[1]][clickPos[0]] = grid[selected[1]][selected[0]];
-					grid[selected[1]][selected[0]] = 0;
-					selected = false;
-				}
-			}
-			else if ([selected[0] - 2, selected[0] + 2, selected[0]].indexOf(clickPos[0]) != -1 && clickPos[1] == selected[1] + 2){
-				if (grid[selected[0]+1][selected[1]+1] != 0 && pieces.indexOf(grid[selected[0]+1][selected[1]+1]) == -1){
-					if (clickPos[0] == selected[0] + 2){
+			else if (isRed){
+				if([selected[0] - 1, selected[0] + 1].indexOf(clickPos[0]) != -1 && clickPos[1] == selected[1] + 1){
+					if (clicked == 0){
 						grid[clickPos[1]][clickPos[0]] = grid[selected[1]][selected[0]];
 						grid[selected[1]][selected[0]] = 0;
-						grid[selected[1]][selected[0]+1] = 0;
 						selected = false;
+					}
+				}
+				else if ([selected[0] - 2, selected[0] + 2, selected[0]].indexOf(clickPos[0]) != -1 && clickPos[1] == selected[1] + 2){
+					if (grid[selected[0]+1][selected[1]+1] != 0 && pieces.indexOf(grid[selected[0]+1][selected[1]+1]) == -1){
+						if (clickPos[0] == selected[0] + 2){
+							taken = grid[selected[1]+1][selected[0]+1]
+							grid[clickPos[1]][clickPos[0]] = grid[selected[1]][selected[0]];
+							grid[selected[1]][selected[0]] = 0;
+							grid[selected[1]+1][selected[0]+1] = 0;
+							selected = false;
+							endTurn();
+						}
+					}
+					else if (grid[selected[0]-1][selected[1]+1] != 0 && pieces.indexOf(grid[selected[0]-1][selected[1]+1]) == -1){
+						if (clickPos[0] == selected[0] + 2){
+							taken = grid[selected[1]+1][selected[0]-1]
+							grid[clickPos[1]][clickPos[0]] = grid[selected[1]][selected[0]];
+							grid[selected[1]][selected[0]] = 0;
+							grid[selected[1]+1][selected[0]-1] = 0;
+							selected = false;
+							endTurn();
+						}
+					}
+				}
+			}
+			else{
+				if([selected[0] - 1, selected[0] + 1].indexOf(clickPos[0]) != -1 && clickPos[1] == selected[1] - 1){
+					if (clicked == 0){
+						grid[clickPos[1]][clickPos[0]] = grid[selected[1]][selected[0]];
+						grid[selected[1]][selected[0]] = 0;
+						selected = false;
+						endTurn();
+					}
+				}
+				else if ([selected[0] - 2, selected[0] + 2, selected[0]].indexOf(clickPos[0]) != -1 && clickPos[1] == selected[1] - 2){
+					if (grid[selected[0]+1][selected[1]-1] != 0 && pieces.indexOf(grid[selected[0]+1][selected[1]-1]) == -1){
+						if (clickPos[0] == selected[0] + 2){
+							taken = grid[selected[1]-1][selected[0]+1]
+							grid[clickPos[1]][clickPos[0]] = grid[selected[1]][selected[0]];
+							grid[selected[1]][selected[0]] = 0;
+							grid[selected[1]+1][selected[0]+1] = 0;
+							selected = false;
+							endTurn();
+						}
+					}
+					else if (grid[selected[0]-1][selected[1]-1] != 0 && pieces.indexOf(grid[selected[0]-1][selected[1]-1]) == -1){
+						if (clickPos[0] == selected[0] + 2){
+							taken = grid[selected[1]-1][selected[0]-1]
+							grid[clickPos[1]][clickPos[0]] = grid[selected[1]][selected[0]];
+							grid[selected[1]][selected[0]] = 0;
+							grid[selected[1]-1][selected[0]-1] = 0;
+							selected = false;
+							endTurn();
+						}
 					}
 				}
 			}
 		}
-    }
+	}
 	renderField(grid, context);
 }
+
+function getMessages(websocket){
+	websocket.addEventListener("message",({ data }) => {
+        const event = JSON.parse(data);
+		grid = data.grid;
+		ind = pieces.indexOf(data.taken)
+		ind!=-1?pieces.remove(ind):"";
+		isTurn = true;
+    });
+}
+
+function endTurn(){
+	const event = {grid: grid, taken: taken}
+    websocket.send(JSON.stringify(event))
+}
+
+window.addEventListener("DOMContentLoaded", () => {
+    const websocket = new WebSocket("ws://localhost:8001");
+	getMessages(websocket)
+});
