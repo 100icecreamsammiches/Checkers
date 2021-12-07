@@ -10,7 +10,7 @@ var white = "#999999";
 var darkred = "#AA0000";
 var lightblack = "#000000";
 var isRed = true;
-var isTurn = false;
+var isTurn = true;
 var selected = false;
 
 reds = [];
@@ -68,10 +68,8 @@ function renderField(grid, context){
 			if (blacks.indexOf(grid[y][x]) != -1){
 				context.fillStyle = lightblack;
 				context.lineWidth = 5;
-				if (selected == [x, y]){
-					if (selected[0] == x && selected[1] == y){
-						context.strokeStyle = "#DDDDDD";
-					}
+				if (selected[0] == x && selected[1] == y){
+					context.strokeStyle = "#DDDDDD";
 				}
 				else{
 					context.strokeStyle = white;
@@ -84,8 +82,6 @@ function renderField(grid, context){
 			else if (reds.indexOf(grid[y][x]) != -1){
 				context.fillStyle = darkred;
 				context.lineWidth = 5;
-				console.log([x, y])
-				console.log(selected[0] == x && selected[1] == y)
 				if (selected[0] == x && selected[1] == y){
 					context.strokeStyle = "#DDDDDD";
 				}
@@ -115,18 +111,14 @@ function click(e) {
 				Math.floor(mousePos.x * (8 / canvas.width)),
 				Math.floor(mousePos.y * (8 / canvas.height))
 			];
-			clicked = grid[clickPos[1]][clickPos[0]];
 			if (!selected || pieces.indexOf(clicked) != -1){
 				if (pieces.indexOf(clicked) != -1){
 					selected = [clickPos[0], clickPos[1]];
 					console.log("selected " + selected);
 				}
         	}
-			else if([selected[0] - 1, selected[0] + 1].indexOf(clickPos[0]) != -1 && clickPos[1] == selected[1]){
+			else if([selected[0] - 1, selected[0] + 1].indexOf(clickPos[0]) != -1 && clickPos[1] == selected[1] + 1){
 				if (clicked == 0){
-					console.log(grid)
-					console.log("moved " + grid[selected[1]][selected[0]] + " from " + selected[1] + ", " + selected[0] + " to " + clickPos[1] + ", " + clickPos[0])
-					console.log(grid)
 					grid[clickPos[1]][clickPos[0]] = grid[selected[1]][selected[0]];
 					grid[selected[1]][selected[0]] = 0;
 					selected = false;
