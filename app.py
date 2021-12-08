@@ -1,4 +1,5 @@
 from flask import Flask, render_template, url_for
+import asyncio
 
 app = Flask(__name__)
 
@@ -10,4 +11,4 @@ async def init():
     app.run(debug=True)
 
 if __name__ == "__main__":
-    init()
+    asyncio.run(init())

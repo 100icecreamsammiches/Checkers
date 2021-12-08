@@ -14,20 +14,11 @@ async def handler(websocket):
             connected.append(websocket)
         websockets.broadcast(iter(connected), json.dumps(message))
 
-
-async def server():
-    print("start serving")
-    async with websockets.serve(handler,host="localhost", port=5001):
-        print("serving")
-        await asyncio.Future()
-
 async def main():
-    f1 = loop.create_task(server())
-    f2 = loop.create_task(init())
-    await asyncio.wait([f1, f2])
+    async with websockets.serve(handler,"localhost", 5001):
+        await init()
+        await asyncio.Future()
 
 
 if __name__ == "__main__":
-    loop = asyncio.get_event_loop()
-    loop.run_until_complete(main())
-    loop.close()
+    asyncio.run(main())
