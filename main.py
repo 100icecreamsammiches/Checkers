@@ -6,6 +6,7 @@ from app import init
 connected = []
 
 async def handler(websocket):
+    print("in progress")
     async for message in websocket:
         message = json.loads(message)
         print(message)
@@ -14,11 +15,19 @@ async def handler(websocket):
         websockets.broadcast(iter(connected), json.dumps(message))
 
 
+async def server():
+    print("start serving")
+    async with websockets.serve(handler,host="localhost", port=5001):
+        print("serving")
+        await asyncio.Future()
+
 async def main():
-    async with websockets.serve(handler,host="localhost", port=8001):
-        await init()
-        await asyncio.Future()  # run forever
+    f1 = loop.create_task(server())
+    f2 = loop.create_task(init())
+    await asyncio.wait([f1, f2])
 
 
 if __name__ == "__main__":
-    asyncio.run(main())
+    loop = asyncio.get_event_loop()
+    loop.run_until_complete(main())
+    loop.close()
