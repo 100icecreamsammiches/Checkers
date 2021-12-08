@@ -1,24 +1,24 @@
-import websockets
-import asyncio
-import json
-from app import init
+from flask import Flask, render_template, url_for
+from flask_socketio import SocketIO, emit, send
+
+app = Flask(__name__)
+
+@app.route("/")
+def main():
+    return render_template("index.html")
+socketio = SocketIO(app)
 
 connected = []
 
-async def handler(websocket):
-    print("in progress")
-    async for message in websocket:
-        message = json.loads(message)
-        print(message)
-        if websocket not in connected:
-            connected.append(websocket)
-        websockets.broadcast(iter(connected), json.dumps(message))
+@socketio.on("connect") 
+def connect(data):
+    print("someone connected")
 
-async def main():
-    async with websockets.serve(handler,"0.0.0.0", 8001):
-        await init()
-        await asyncio.Future()
+@socketio.on("message")
+def turn(data):
+    print(data)
+    emit(data, broadcast=True)
 
 
 if __name__ == "__main__":
-    asyncio.run(main())
+    app.run(debug=True)

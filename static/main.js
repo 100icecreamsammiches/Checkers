@@ -10,6 +10,13 @@ var white = "#999999";
 var isRed = true;
 var isTurn = true;
 var selected = false;
+var taken = -1;
+var socket = io();
+socket.on('connect', function() {
+	console.log(socket.id);
+	socket.send(JSON.stringify({message: "hi"}));
+});
+
 
 reds = [];
 blacks = [];
@@ -121,6 +128,7 @@ function click(e) {
 						grid[clickPos[1]][clickPos[0]] = grid[selected[1]][selected[0]];
 						grid[selected[1]][selected[0]] = 0;
 						selected = false;
+						endTurn();
 					}
 				}
 				else if ([selected[0] - 2, selected[0] + 2, selected[0]].indexOf(clickPos[0]) != -1 && clickPos[1] == selected[1] + 2){
@@ -131,6 +139,7 @@ function click(e) {
 							grid[selected[1]][selected[0]] = 0;
 							grid[selected[1]+1][selected[0]+1] = 0;
 							selected = false;
+							console.log("turn ended");
 							endTurn();
 						}
 					}
@@ -141,6 +150,7 @@ function click(e) {
 							grid[selected[1]][selected[0]] = 0;
 							grid[selected[1]+1][selected[0]-1] = 0;
 							selected = false;
+							console.log("turn ended");
 							endTurn();
 						}
 					}
@@ -152,6 +162,7 @@ function click(e) {
 						grid[clickPos[1]][clickPos[0]] = grid[selected[1]][selected[0]];
 						grid[selected[1]][selected[0]] = 0;
 						selected = false;
+						console.log("turn ended");
 						endTurn();
 					}
 				}
@@ -163,6 +174,7 @@ function click(e) {
 							grid[selected[1]][selected[0]] = 0;
 							grid[selected[1]+1][selected[0]+1] = 0;
 							selected = false;
+							console.log("turn ended");
 							endTurn();
 						}
 					}
@@ -173,6 +185,7 @@ function click(e) {
 							grid[selected[1]][selected[0]] = 0;
 							grid[selected[1]-1][selected[0]-1] = 0;
 							selected = false;
+							console.log("turn ended");
 							endTurn();
 						}
 					}
@@ -183,22 +196,17 @@ function click(e) {
 	renderField(grid, context);
 }
 
-function getMessages(websocket){
-	websocket.addEventListener("message",({ data }) => {
-        const event = JSON.parse(data);
-		grid = data.grid;
-		ind = pieces.indexOf(data.taken)
-		ind!=-1?pieces.remove(ind):"";
-		isTurn = true;
-    });
-}
+socket.on("turn", function (data){
+	console.log("recieved")
+    const event = JSON.parse(data);
+	grid = data.grid;
+	ind = pieces.indexOf(data.taken)
+	ind!=-1?pieces.remove(ind):"";
+	isTurn = true;
+})
 
 function endTurn(){
+	console.log("sending");
 	const event = {grid: grid, taken: taken}
-    websocket.send(JSON.stringify(event))
+    socket.emit(JSON.stringify(event))
 }
-
-window.addEventListener("DOMContentLoaded", () => {
-    const websocket = new WebSocket("ws://localhost:5001");
-	getMessages(websocket)
-});
