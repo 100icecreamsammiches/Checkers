@@ -196,17 +196,19 @@ function click(e) {
 	renderField(grid, context);
 }
 
-socket.on("turn", function (data){
-	console.log("recieved")
+socket.on("json", function (data){
+	console.log(data);
     const event = JSON.parse(data);
-	grid = data.grid;
-	ind = pieces.indexOf(data.taken)
+	grid = event.grid;
+	ind = pieces.indexOf(event.taken);
 	ind!=-1?pieces.remove(ind):"";
 	isTurn = true;
 })
 
 function endTurn(){
 	console.log("sending");
-	const event = {grid: grid, taken: taken}
-    socket.emit(JSON.stringify(event))
+	var event = {grid: grid, taken: taken};
+	event = JSON.stringify(event)
+	console.log(event)
+    socket.emit("json", event);
 }
