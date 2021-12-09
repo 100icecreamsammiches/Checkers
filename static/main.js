@@ -8,15 +8,12 @@ var black = "#000000";
 var red = "#FF0000";
 var white = "#999999";
 var isRed = true;
-var isTurn = true;
+var isTurn = false;
 var selected = false;
+var fetched = false;
 var taken = -1;
 var socket = io();
-socket.on('connect', function() {
-	console.log(socket.id);
-	socket.send(JSON.stringify({message: "hi"}));
-});
-
+var pieces = [];
 
 reds = [];
 blacks = [];
@@ -24,13 +21,6 @@ blacks = [];
 for (var i = 1; i <= 12; i++){
     reds.push(i);
     blacks.push(i + 12);
-}
-
-if (isRed){
-	pieces = reds;
-}
-else{
-	pieces = blacks;
 }
 
 grid = [
@@ -139,7 +129,6 @@ function click(e) {
 							grid[selected[1]][selected[0]] = 0;
 							grid[selected[1]+1][selected[0]+1] = 0;
 							selected = false;
-							console.log("turn ended");
 							endTurn();
 						}
 					}
@@ -150,7 +139,6 @@ function click(e) {
 							grid[selected[1]][selected[0]] = 0;
 							grid[selected[1]+1][selected[0]-1] = 0;
 							selected = false;
-							console.log("turn ended");
 							endTurn();
 						}
 					}
@@ -162,7 +150,6 @@ function click(e) {
 						grid[clickPos[1]][clickPos[0]] = grid[selected[1]][selected[0]];
 						grid[selected[1]][selected[0]] = 0;
 						selected = false;
-						console.log("turn ended");
 						endTurn();
 					}
 				}
@@ -174,7 +161,6 @@ function click(e) {
 							grid[selected[1]][selected[0]] = 0;
 							grid[selected[1]+1][selected[0]+1] = 0;
 							selected = false;
-							console.log("turn ended");
 							endTurn();
 						}
 					}
@@ -185,7 +171,6 @@ function click(e) {
 							grid[selected[1]][selected[0]] = 0;
 							grid[selected[1]-1][selected[0]-1] = 0;
 							selected = false;
-							console.log("turn ended");
 							endTurn();
 						}
 					}
@@ -196,19 +181,49 @@ function click(e) {
 	renderField(grid, context);
 }
 
-socket.on("json", function (data){
-	console.log(data);
+socket.on("turn", function (data){
     const event = JSON.parse(data);
 	grid = event.grid;
 	ind = pieces.indexOf(event.taken);
 	ind!=-1?pieces.remove(ind):"";
-	isTurn = true;
+	if (event.isRed != isRed){
+		isTurn = true;
+	}
+	renderField(grid, context)
 })
 
 function endTurn(){
 	console.log("sending");
-	var event = {grid: grid, taken: taken};
-	event = JSON.stringify(event)
-	console.log(event)
-    socket.emit("json", event);
+	var event = {grid: grid, taken: taken, isRed:isRed};
+	event = JSON.stringify(event);
+    socket.emit("turn", event);
+	isTurn = false;
 }
+
+socket.on("fetch", function (data){
+	if (fetched){
+		console.log("sending data")
+		var event = {grid: grid, isRed: false};
+		event = JSON.stringify(event);
+    	socket.emit("init", event);
+		isTurn = true;
+	}
+})
+
+socket.on("init", function (data){
+	if (!fetched){
+		console.log("inited")
+		data = JSON.parse(data);
+		console.log(data)
+		grid = data.grid;
+		isRed = data.isRed;
+		if (isRed){
+			pieces = reds;
+		}
+		else{
+			pieces = blacks;
+		}
+		renderField(grid, context);
+	}
+	fetched = true;
+})
