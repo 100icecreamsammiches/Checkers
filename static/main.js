@@ -7,12 +7,12 @@ canvas.height = window.innerHeight * .9;
 var black = "#000000";
 var red = "#FF0000";
 var white = "#999999";
-var isRed = true;
-var isTurn = false;
+var isRed = null;
+var isTurn = null;
 var selected = false;
 var fetched = false;
+var socket = io({"forceNew": true});
 var taken = -1;
-var socket = io();
 var pieces = [];
 
 reds = [];
@@ -34,10 +34,10 @@ grid = [
 	[0,21,0,22,0,23,0,24]
 ]
 
-renderField(grid, context)
-
 function renderField(grid, context){
 	context.clearRect(0, 0, canvas.width, canvas.height);
+	document.getElementById("turn").innerHTML = "Is Turn: " + isTurn;
+	document.getElementById("color").innerHTML = "Is Red: " + isRed;
 	tileWidth = canvas.width / 8;
 	tileHeight = canvas.height / 8;
     const fontSize = tileWidth / 1.5;
@@ -110,6 +110,7 @@ function click(e) {
 			if (!selected || pieces.indexOf(clicked) != -1){
 				if (pieces.indexOf(clicked) != -1){
 					selected = [clickPos[0], clickPos[1]];
+					renderField(grid, context);
 				}
         	}
 			else if (isRed){
@@ -159,7 +160,7 @@ function click(e) {
 							taken = grid[selected[1]-1][selected[0]+1]
 							grid[clickPos[1]][clickPos[0]] = grid[selected[1]][selected[0]];
 							grid[selected[1]][selected[0]] = 0;
-							grid[selected[1]+1][selected[0]+1] = 0;
+							grid[selected[1]-1][selected[0]+1] = 0;
 							selected = false;
 							endTurn();
 						}
@@ -178,10 +179,10 @@ function click(e) {
 			}
 		}
 	}
-	renderField(grid, context);
 }
 
 socket.on("turn", function (data){
+	console.log("a turn has occured")
     const event = JSON.parse(data);
 	grid = event.grid;
 	ind = pieces.indexOf(event.taken);
@@ -198,32 +199,46 @@ function endTurn(){
 	event = JSON.stringify(event);
     socket.emit("turn", event);
 	isTurn = false;
+	renderField(grid, context)
 }
 
-socket.on("fetch", function (data){
+socket.on("message", function (){
+	console.log("someone wants to fetch " + fetched)
 	if (fetched){
 		console.log("sending data")
 		var event = {grid: grid, isRed: false};
 		event = JSON.stringify(event);
     	socket.emit("init", event);
 		isTurn = true;
+		renderField(grid, context)
 	}
 })
 
 socket.on("init", function (data){
+	console.log("someone inited")
 	if (!fetched){
 		console.log("inited")
 		data = JSON.parse(data);
 		console.log(data)
 		grid = data.grid;
 		isRed = data.isRed;
+		isTurn = false;
 		if (isRed){
 			pieces = reds;
 		}
 		else{
 			pieces = blacks;
+			renderField(grid, context);
 		}
-		renderField(grid, context);
 	}
+	renderField(grid, context);
 	fetched = true;
+})
+
+window.onbeforeunload = function () {
+	socket.emit('leaving', JSON.stringify({bye: "bye"}));
+}
+
+window.addEventListener("DOMContentLoaded", ()=>{
+	renderField(grid, context);
 })

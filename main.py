@@ -1,23 +1,31 @@
 from flask import Flask, render_template, url_for
-from flask_socketio import SocketIO, emit, send
+from flask_socketio import SocketIO, emit
+from aiohttp import web
 import json
 
 
-full = False
+full = True
 
 app = Flask(__name__)
 
 @app.route("/")
 def main():
     return render_template("index.html")
-socketio = SocketIO(app)
+socketio = SocketIO(app, logger=True, engineio_logger=True)
 
-connected = []
+connected = 0
 
-@socketio.on("connect") 
-def connect(data):
+@socketio.event
+def joined():
+    print("hello")
+
+@socketio.event
+def connect():
+    print("joined")
+    global connected
+    connected += 1
     global full
-    if not full:
+    if full:
         grid = [
 	        [1,0,2,0,3,0,4,0],
 	        [0,5,0,6,0,7,0,8],
@@ -29,29 +37,33 @@ def connect(data):
 	        [0,21,0,22,0,23,0,24]
         ]
         event = {"grid": grid, "isRed": True}
+        print("sending an init")
         emit("init", json.dumps(event), broadcast=True)
     else:
-        emit("fetch", "fetching", broadcast=True)
+        print("someone be fetchin tho")
+        emit("fetch", json.dumps({"fetching": "fetching"}), broadcast=True, include_self=False)
     full = not full
-    print("someone joined, full?{}".format(full))
+    print("someone joined, full? {}, remaining? {}".format(full, connected))
 
-@socketio.on("turn")
+@socketio.event
 def turn(json):
     print("help")
     print(json)
     emit("turn", json, broadcast=True)
 
-@socketio.on("init")
+@socketio.event
 def init(data):
     print("sent init")
-    emit("init", data, broadcast=True)
+    emit("init", data, broadcast=True, include_self=False)
 
-@socketio.on("disconnect")
+@socketio.event
 def disconnect():
     global full
     full = not full
-    print("left, full? {}".format(full))
+    global connected
+    connected -= 1
+    print("left, full? {}, remaining? {}".format(full, connected))
 
 
 if __name__ == "__main__":
-    app.run(debug=True)
+    app.run(debug=True, host="0.0.0.0")
