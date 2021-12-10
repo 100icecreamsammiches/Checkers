@@ -3,15 +3,16 @@ from flask_socketio import SocketIO, emit
 from aiohttp import web
 import json
 
+async_mode = None
 
 full = True
 
 app = Flask(__name__)
+socketio = SocketIO(app, async_mode=async_mode)
 
 @app.route("/")
 def main():
-    return render_template("index.html")
-socketio = SocketIO(app, logger=True, engineio_logger=True)
+    return render_template("index.html", sync_mode=socketio.async_mode)
 
 connected = 0
 
@@ -66,4 +67,4 @@ def disconnect():
 
 
 if __name__ == "__main__":
-    app.run(debug=True, host="0.0.0.0")
+    socketio.run(app, debug=True, host="0.0.0.0")
