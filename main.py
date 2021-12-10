@@ -1,6 +1,5 @@
 from flask import Flask, render_template, url_for
 from flask_socketio import SocketIO, emit
-from aiohttp import web
 import json
 
 async_mode = None
@@ -41,8 +40,8 @@ def connect():
         print("sending an init")
         emit("init", json.dumps(event), broadcast=True)
     else:
-        print("someone be fetchin tho")
-        emit("fetch", json.dumps({"fetching": "fetching"}), broadcast=True, include_self=False)
+        print("sending a fetch")
+        emit("fetch", json.dumps({"fetching": "fetching"}), broadcast=True)
     full = not full
     print("someone joined, full? {}, remaining? {}".format(full, connected))
 

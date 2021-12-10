@@ -123,7 +123,7 @@ function click(e) {
 					}
 				}
 				else if ([selected[0] - 2, selected[0] + 2, selected[0]].indexOf(clickPos[0]) != -1 && clickPos[1] == selected[1] + 2){
-					if (grid[selected[0]+1][selected[1]+1] != 0 && pieces.indexOf(grid[selected[0]+1][selected[1]+1]) == -1){
+					if (grid[selected[1]+1][selected[0]+1] != 0 && pieces.indexOf(grid[selected[1]+1][selected[0]+1]) == -1){
 						if (clickPos[0] == selected[0] + 2){
 							taken = grid[selected[1]+1][selected[0]+1]
 							grid[clickPos[1]][clickPos[0]] = grid[selected[1]][selected[0]];
@@ -133,7 +133,7 @@ function click(e) {
 							endTurn();
 						}
 					}
-					else if (grid[selected[0]-1][selected[1]+1] != 0 && pieces.indexOf(grid[selected[0]-1][selected[1]+1]) == -1){
+					else if (grid[selected[1]+1][selected[0]-1] != 0 && pieces.indexOf(grid[selected[1]+1][selected[0]-1]) == -1){
 						if (clickPos[0] == selected[0] + 2){
 							taken = grid[selected[1]+1][selected[0]-1]
 							grid[clickPos[1]][clickPos[0]] = grid[selected[1]][selected[0]];
@@ -155,7 +155,7 @@ function click(e) {
 					}
 				}
 				else if ([selected[0] - 2, selected[0] + 2, selected[0]].indexOf(clickPos[0]) != -1 && clickPos[1] == selected[1] - 2){
-					if (grid[selected[0]+1][selected[1]-1] != 0 && pieces.indexOf(grid[selected[0]+1][selected[1]-1]) == -1){
+					if (grid[selected[1]-1][selected[0]+1] != 0 && pieces.indexOf(grid[selected[1]-1][selected[0]+1]) == -1){
 						if (clickPos[0] == selected[0] + 2){
 							taken = grid[selected[1]-1][selected[0]+1]
 							grid[clickPos[1]][clickPos[0]] = grid[selected[1]][selected[0]];
@@ -165,8 +165,8 @@ function click(e) {
 							endTurn();
 						}
 					}
-					else if (grid[selected[0]-1][selected[1]-1] != 0 && pieces.indexOf(grid[selected[0]-1][selected[1]-1]) == -1){
-						if (clickPos[0] == selected[0] + 2){
+					else if (grid[selected[1]-1][selected[0]-1] != 0 && pieces.indexOf(grid[selected[1]-1][selected[0]-1]) == -1){
+						if (clickPos[0] == selected[0] - 2){
 							taken = grid[selected[1]-1][selected[0]-1]
 							grid[clickPos[1]][clickPos[0]] = grid[selected[1]][selected[0]];
 							grid[selected[1]][selected[0]] = 0;
@@ -186,7 +186,7 @@ socket.on("turn", function (data){
     const event = JSON.parse(data);
 	grid = event.grid;
 	ind = pieces.indexOf(event.taken);
-	ind!=-1?pieces.remove(ind):"";
+	ind!=-1?pieces.splice(ind,1):"";
 	if (event.isRed != isRed){
 		isTurn = true;
 	}
@@ -202,7 +202,7 @@ function endTurn(){
 	renderField(grid, context)
 }
 
-socket.on("message", function (){
+socket.on("fetch", function (){
 	console.log("someone wants to fetch " + fetched)
 	if (fetched){
 		console.log("sending data")
@@ -236,7 +236,7 @@ socket.on("init", function (data){
 })
 
 window.onbeforeunload = function () {
-	socket.emit('leaving', JSON.stringify({bye: "bye"}));
+	socket.disconnect();
 }
 
 window.addEventListener("DOMContentLoaded", ()=>{
