@@ -31,29 +31,24 @@ def connect():
 	        [0,5,0,6,0,7,0,8],
 	        [9,0,10,0,11,0,12,0],
 	        [0,0,0,0,0,0,0,0],
-	        [0,0,0,0,0,0,16,0],
-	        [0,13,0,14,0,15,0,0],
+	        [0,0,0,0,0,0,0,0],
+	        [0,13,0,14,0,15,0,16],
 	        [17,0,18,0,19,0,20,0],
 	        [0,21,0,22,0,23,0,24]
         ]
         event = {"grid": grid, "isRed": True}
-        print("sending an init")
         emit("init", json.dumps(event), broadcast=True)
     else:
-        print("sending a fetch")
         emit("fetch", json.dumps({"fetching": "fetching"}), broadcast=True)
     full = not full
     print("someone joined, full? {}, remaining? {}".format(full, connected))
 
 @socketio.event
 def turn(json):
-    print("help")
-    print(json)
     emit("turn", json, broadcast=True)
 
 @socketio.event
 def init(data):
-    print("sent init")
     emit("init", data, broadcast=True, include_self=False)
 
 @socketio.event

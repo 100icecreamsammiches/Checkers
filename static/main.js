@@ -17,6 +17,8 @@ var pieces = [];
 
 reds = [];
 blacks = [];
+kings = [-1];
+king = -1;
 
 for (var i = 1; i <= 12; i++){
     reds.push(i);
@@ -36,8 +38,15 @@ grid = [
 
 function renderField(grid, context){
 	context.clearRect(0, 0, canvas.width, canvas.height);
-	document.getElementById("turn").innerHTML = "Is Turn: " + isTurn;
-	document.getElementById("color").innerHTML = "Is Red: " + isRed;
+	if (isRed){
+		document.getElementById("status").innerHTML = "You are red.";
+	}
+	else if (!isRed){
+		document.getElementById("status").innerHTML = "You are gray.";
+	}
+	if (isTurn){
+		document.getElementById("status").innerHTML += "<br>It's your turn!";
+	}
 	tileWidth = canvas.width / 8;
 	tileHeight = canvas.height / 8;
     const fontSize = tileWidth / 1.5;
@@ -88,6 +97,14 @@ function renderField(grid, context){
 				context.fill();
 				context.stroke();
 			}
+			if (kings.indexOf(grid[y][x]) != -1){
+				context.fillStyle = "#FFCC00";
+				context.strokeStyle= "#EEAA00"
+				context.beginPath();
+				context.ellipse((x*tileWidth)+(tileWidth/2), (y*tileHeight)+(tileHeight/2), tileWidth/4-5, tileHeight/4-5, 0, 0, 2*Math.PI);
+				context.stroke();
+				context.fill();
+			}
 		}
 	}
 }
@@ -113,7 +130,7 @@ function click(e) {
 					renderField(grid, context);
 				}
         	}
-			else if (isRed){
+			else if (isRed || kings.indexOf(grid[selected[1][0]])!=-1){
 				if([selected[0] - 1, selected[0] + 1].indexOf(clickPos[0]) != -1 && clickPos[1] == selected[1] + 1){
 					if (clicked == 0){
 						grid[clickPos[1]][clickPos[0]] = grid[selected[1]][selected[0]];
@@ -122,9 +139,9 @@ function click(e) {
 						endTurn();
 					}
 				}
-				else if ([selected[0] - 2, selected[0] + 2, selected[0]].indexOf(clickPos[0]) != -1 && clickPos[1] == selected[1] + 2){
-					if (grid[selected[1]+1][selected[0]+1] != 0 && pieces.indexOf(grid[selected[1]+1][selected[0]+1]) == -1){
-						if (clickPos[0] == selected[0] + 2){
+				else if ([selected[0] - 2, selected[0] + 2].indexOf(clickPos[0]) != -1 && clickPos[1] == selected[1] + 2){
+					if (clickPos[0] == selected[0] + 2){
+						if (grid[selected[1]+1][selected[0]+1] != 0 && pieces.indexOf(grid[selected[1]+1][selected[0]+1]) == -1){
 							taken = grid[selected[1]+1][selected[0]+1]
 							grid[clickPos[1]][clickPos[0]] = grid[selected[1]][selected[0]];
 							grid[selected[1]][selected[0]] = 0;
@@ -133,8 +150,8 @@ function click(e) {
 							endTurn();
 						}
 					}
-					else if (grid[selected[1]+1][selected[0]-1] != 0 && pieces.indexOf(grid[selected[1]+1][selected[0]-1]) == -1){
-						if (clickPos[0] == selected[0] + 2){
+					else if (clickPos[0] == selected[0] - 2){
+						if (grid[selected[1]+1][selected[0]-1] != 0 && pieces.indexOf(grid[selected[1]+1][selected[0]-1]) == -1){
 							taken = grid[selected[1]+1][selected[0]-1]
 							grid[clickPos[1]][clickPos[0]] = grid[selected[1]][selected[0]];
 							grid[selected[1]][selected[0]] = 0;
@@ -144,10 +161,21 @@ function click(e) {
 						}
 					}
 				}
+				if (isRed){
+					for(var i = 0; i < 8; i++){
+						if (pieces.indexOf(grid[7][i])!=-1){
+							kings.push(grid[7][i]);
+							king = grid[7][i];
+						}
+					}
+				}
 			}
-			else{
+			if (!isRed || kings.indexOf(grid[selected[1][0]])!=-1){
+				console.log(([selected[0] - 1, selected[0] + 1].indexOf(clickPos[0]) != -1 && clickPos[1] == selected[1] - 1))
 				if([selected[0] - 1, selected[0] + 1].indexOf(clickPos[0]) != -1 && clickPos[1] == selected[1] - 1){
+					console.log("am here")
 					if (clicked == 0){
+						console.log("made it")
 						grid[clickPos[1]][clickPos[0]] = grid[selected[1]][selected[0]];
 						grid[selected[1]][selected[0]] = 0;
 						selected = false;
@@ -176,17 +204,26 @@ function click(e) {
 						}
 					}
 				}
+				if (!isRed){
+					for(var i = 0; i < 8; i++){
+						if (pieces.indexOf(grid[0][i])!=-1){
+							kings.push(grid[0][i]);
+							king = grid[0][i];
+						}
+					}
+				}
 			}
 		}
 	}
 }
 
 socket.on("turn", function (data){
-	console.log("a turn has occured")
     const event = JSON.parse(data);
 	grid = event.grid;
 	ind = pieces.indexOf(event.taken);
 	ind!=-1?pieces.splice(ind,1):"";
+	console.log(event.king)
+	event.king!=-1?kings.push(event.king):"";
 	if (event.isRed != isRed){
 		isTurn = true;
 	}
@@ -194,8 +231,7 @@ socket.on("turn", function (data){
 })
 
 function endTurn(){
-	console.log("sending");
-	var event = {grid: grid, taken: taken, isRed:isRed};
+	var event = {grid: grid, taken: taken, isRed:isRed, king:king};
 	event = JSON.stringify(event);
     socket.emit("turn", event);
 	isTurn = false;
@@ -203,9 +239,7 @@ function endTurn(){
 }
 
 socket.on("fetch", function (){
-	console.log("someone wants to fetch " + fetched)
 	if (fetched){
-		console.log("sending data")
 		var event = {grid: grid, isRed: false};
 		event = JSON.stringify(event);
     	socket.emit("init", event);
@@ -215,30 +249,23 @@ socket.on("fetch", function (){
 })
 
 socket.on("init", function (data){
-	console.log("someone inited")
 	if (!fetched){
-		console.log("inited")
 		data = JSON.parse(data);
-		console.log(data)
 		grid = data.grid;
 		isRed = data.isRed;
 		isTurn = false;
 		if (isRed){
 			pieces = reds;
+			document.getElementById("status").innerHTML = "Waiting for other player...";
 		}
 		else{
 			pieces = blacks;
 			renderField(grid, context);
 		}
 	}
-	renderField(grid, context);
 	fetched = true;
 })
 
 window.onbeforeunload = function () {
 	socket.disconnect();
 }
-
-window.addEventListener("DOMContentLoaded", ()=>{
-	renderField(grid, context);
-})
