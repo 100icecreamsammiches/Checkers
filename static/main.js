@@ -130,7 +130,7 @@ function click(e) {
 					renderField(grid, context);
 				}
         	}
-			else if (isRed || kings.indexOf(grid[selected[1][0]])!=-1){
+			else if (isRed || kings.indexOf(grid[selected[1]][selected[0]])!=-1){
 				if([selected[0] - 1, selected[0] + 1].indexOf(clickPos[0]) != -1 && clickPos[1] == selected[1] + 1){
 					if (clicked == 0){
 						grid[clickPos[1]][clickPos[0]] = grid[selected[1]][selected[0]];
@@ -161,16 +161,8 @@ function click(e) {
 						}
 					}
 				}
-				if (isRed){
-					for(var i = 0; i < 8; i++){
-						if (pieces.indexOf(grid[7][i])!=-1){
-							kings.push(grid[7][i]);
-							king = grid[7][i];
-						}
-					}
-				}
 			}
-			if (!isRed || kings.indexOf(grid[selected[1][0]])!=-1){
+			if (!isRed || kings.indexOf(grid[selected[1]][selected[0]])!=-1){
 				console.log(([selected[0] - 1, selected[0] + 1].indexOf(clickPos[0]) != -1 && clickPos[1] == selected[1] - 1))
 				if([selected[0] - 1, selected[0] + 1].indexOf(clickPos[0]) != -1 && clickPos[1] == selected[1] - 1){
 					console.log("am here")
@@ -204,14 +196,6 @@ function click(e) {
 						}
 					}
 				}
-				if (!isRed){
-					for(var i = 0; i < 8; i++){
-						if (pieces.indexOf(grid[0][i])!=-1){
-							kings.push(grid[0][i]);
-							king = grid[0][i];
-						}
-					}
-				}
 			}
 		}
 	}
@@ -231,6 +215,22 @@ socket.on("turn", function (data){
 })
 
 function endTurn(){
+	if (isRed){
+		for(var i = 0; i < 8; i++){
+			if (pieces.indexOf(grid[7][i])!=-1){
+				kings.push(grid[7][i]);
+				king = grid[7][i];
+			}
+		}
+	}
+	else{
+		for(var i = 0; i < 8; i++){
+			if (pieces.indexOf(grid[0][i])!=-1){
+				kings.push(grid[0][i]);
+				king = grid[0][i];
+			}
+		}
+	}
 	var event = {grid: grid, taken: taken, isRed:isRed, king:king};
 	event = JSON.stringify(event);
     socket.emit("turn", event);
