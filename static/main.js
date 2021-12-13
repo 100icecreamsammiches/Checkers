@@ -141,7 +141,7 @@ function click(e) {
 				}
 				else if ([selected[0] - 2, selected[0] + 2].indexOf(clickPos[0]) != -1 && clickPos[1] == selected[1] + 2){
 					if (clickPos[0] == selected[0] + 2){
-						if (grid[selected[1]+1][selected[0]+1] != 0 && pieces.indexOf(grid[selected[1]+1][selected[0]+1]) == -1){
+						if (grid[selected[1]+1][selected[0]+1] != 0 && pieces.indexOf(grid[selected[1]+1][selected[0]+1]) == -1 && clicked == 0){
 							taken = grid[selected[1]+1][selected[0]+1]
 							grid[clickPos[1]][clickPos[0]] = grid[selected[1]][selected[0]];
 							grid[selected[1]][selected[0]] = 0;
@@ -151,7 +151,7 @@ function click(e) {
 						}
 					}
 					else if (clickPos[0] == selected[0] - 2){
-						if (grid[selected[1]+1][selected[0]-1] != 0 && pieces.indexOf(grid[selected[1]+1][selected[0]-1]) == -1){
+						if (grid[selected[1]+1][selected[0]-1] != 0 && pieces.indexOf(grid[selected[1]+1][selected[0]-1]) == -1 && clicked == 0){
 							taken = grid[selected[1]+1][selected[0]-1]
 							grid[clickPos[1]][clickPos[0]] = grid[selected[1]][selected[0]];
 							grid[selected[1]][selected[0]] = 0;
@@ -163,7 +163,7 @@ function click(e) {
 				}
 			}
 			if (!isRed || kings.indexOf(grid[selected[1]][selected[0]])!=-1){
-				console.log(([selected[0] - 1, selected[0] + 1].indexOf(clickPos[0]) != -1 && clickPos[1] == selected[1] - 1))
+				console.log(([selected[0] - 1, selected[0] + 1].indexOf(clickPos[0]) != -1 && clickPos[1] == selected[1] - 1 && clicked == 0))
 				if([selected[0] - 1, selected[0] + 1].indexOf(clickPos[0]) != -1 && clickPos[1] == selected[1] - 1){
 					console.log("am here")
 					if (clicked == 0){
@@ -175,7 +175,7 @@ function click(e) {
 					}
 				}
 				else if ([selected[0] - 2, selected[0] + 2, selected[0]].indexOf(clickPos[0]) != -1 && clickPos[1] == selected[1] - 2){
-					if (grid[selected[1]-1][selected[0]+1] != 0 && pieces.indexOf(grid[selected[1]-1][selected[0]+1]) == -1){
+					if (grid[selected[1]-1][selected[0]+1] != 0 && pieces.indexOf(grid[selected[1]-1][selected[0]+1]) == -1 && clicked == 0){
 						if (clickPos[0] == selected[0] + 2){
 							taken = grid[selected[1]-1][selected[0]+1]
 							grid[clickPos[1]][clickPos[0]] = grid[selected[1]][selected[0]];
@@ -185,7 +185,7 @@ function click(e) {
 							endTurn();
 						}
 					}
-					else if (grid[selected[1]-1][selected[0]-1] != 0 && pieces.indexOf(grid[selected[1]-1][selected[0]-1]) == -1){
+					else if (grid[selected[1]-1][selected[0]-1] != 0 && pieces.indexOf(grid[selected[1]-1][selected[0]-1]) == -1 && clicked == 0){
 						if (clickPos[0] == selected[0] - 2){
 							taken = grid[selected[1]-1][selected[0]-1]
 							grid[clickPos[1]][clickPos[0]] = grid[selected[1]][selected[0]];
@@ -212,6 +212,9 @@ socket.on("turn", function (data){
 		isTurn = true;
 	}
 	renderField(grid, context)
+	if (pieces.length < 1){
+		gameOver();
+	}
 })
 
 function endTurn(){
@@ -264,6 +267,18 @@ socket.on("init", function (data){
 		}
 	}
 	fetched = true;
+})
+
+function gameOver(){
+	isTurn = false;
+	document.getElementById("status").innerHTML = "You lost, better luck next time.";
+	var event = JSON.stringify({won: "you"});
+	socket.emit("won", event);
+}
+
+socket.on("win", function (){
+	isTurn = false;
+	document.getElementById("status").innerHTML = "Congratualations, you won!";
 })
 
 window.onbeforeunload = function () {

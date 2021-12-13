@@ -52,6 +52,10 @@ def init(data):
     emit("init", data, broadcast=True, include_self=False)
 
 @socketio.event
+def win(data):
+    emit("win", data, broadcast=True, include_self=False)
+
+@socketio.event
 def disconnect():
     global full
     full = not full
